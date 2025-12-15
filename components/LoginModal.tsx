@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, ArrowRight, User, AlertCircle, CheckCircle2, Loader2, Send } from 'lucide-react';
+import { authService } from '../services/authService';
 
 interface LoginModalProps {
   onClose: () => void;
@@ -65,18 +66,29 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onLogin }) => {
 
     setIsSubmitting(true);
 
-    // Simulate Network Request / Backend Processing
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      let response;
+      
+      if (viewState === 'signup') {
+        // Call register API
+        response = await authService.register({ fullName, email, password });
+      } else {
+        // Call login API
+        response = await authService.login({ email, password });
+      }
 
-    if (viewState === 'signup') {
-        // Simulate sending email & generating token
-        // In a real app, this is where the backend sends the email
-        setViewState('verify_pending');
-        setIsSubmitting(false);
-    } else {
-        // Login success
-        setIsSubmitting(false);
+      setIsSubmitting(false);
+
+      if (response.success) {
+        // Login successful
         onLogin();
+      } else {
+        // Show error
+        setEmailError(response.message || 'Authentication failed');
+      }
+    } catch (error) {
+      setIsSubmitting(false);
+      setEmailError('Network error. Please try again.');
     }
   };
 

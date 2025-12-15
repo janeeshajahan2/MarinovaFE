@@ -23,6 +23,7 @@ import { fetchWeatherData, transformToChartData, transformToDailyForecast } from
 import { analyzeWeather } from './services/geminiService';
 import { getGlobalOceanSnapshot } from './services/dashboardService';
 import { checkAndIncrementUsage, isLimitReached } from './services/usageService';
+import { authService } from './services/authService';
 
 import WeatherChart from './components/WeatherChart';
 import OceanCard from './components/OceanCard';
@@ -60,26 +61,16 @@ const App: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardOceanData[]>([]);
   const [dashboardLoading, setDashboardLoading] = useState(false);
 
-  // Check verification token on mount
+  // Check for persisted auth token on mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    
-    if (token) {
-      try {
-        const decodedEmail = atob(token);
-        // Basic validation that it's a gmail address
-        if (decodedEmail.endsWith('@gmail.com')) {
-          setIsAuthenticated(true);
-          setShowLogin(false);
-          setViewMode('intelligence');
-          // Clean URL without refresh
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-      } catch (e) {
-        console.error("Invalid verification token");
+    const checkAuth = async () => {
+      const response = await authService.getCurrentUser();
+      if (response.success) {
+        setIsAuthenticated(true);
       }
-    }
+    };
+    
+    checkAuth();
   }, []);
 
   // Check usage limit on initial load
@@ -240,6 +231,7 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
+    authService.logout();
     setIsAuthenticated(false);
     setViewMode('dashboard');
   };

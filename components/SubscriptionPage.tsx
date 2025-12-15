@@ -51,7 +51,7 @@ const SubscriptionPage: React.FC<Props> = ({ onSubscribe }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
           
           {/* Retail - India */}
-          <div className="bg-[#1e293b]/80 backdrop-blur-sm border border-slate-700 rounded-3xl p-8 hover:border-cyan-500/30 transition-all duration-300 flex flex-col h-full relative group">
+          <div className="bg-[#1e293b]/80 backdrop-blur-sm border border-slate-700 rounded-3xl p-6 md:p-8 hover:border-cyan-500/30 transition-all duration-300 flex flex-col h-full relative group">
              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 text-slate-300 text-xs font-bold px-4 py-1 rounded-full border border-slate-700 uppercase tracking-wider whitespace-nowrap">
                Individual
              </div>
@@ -88,7 +88,7 @@ const SubscriptionPage: React.FC<Props> = ({ onSubscribe }) => {
           </div>
 
           {/* Retail - International */}
-          <div className="bg-gradient-to-b from-[#1e293b] to-[#0f172a] border border-cyan-500/50 rounded-3xl p-8 shadow-2xl shadow-cyan-900/20 relative transform md:-translate-y-4 flex flex-col h-full">
+          <div className="bg-gradient-to-b from-[#1e293b] to-[#0f172a] border border-cyan-500/50 rounded-3xl p-6 md:p-8 shadow-2xl shadow-cyan-900/20 relative transform md:-translate-y-4 flex flex-col h-full">
              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-cyan-600 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg uppercase tracking-wider flex items-center gap-1 whitespace-nowrap">
                <Globe className="w-3 h-3" /> Global Best Seller
              </div>
@@ -126,7 +126,7 @@ const SubscriptionPage: React.FC<Props> = ({ onSubscribe }) => {
           </div>
 
           {/* Enterprise */}
-          <div className="bg-[#1e293b]/80 backdrop-blur-sm border border-slate-700 rounded-3xl p-8 hover:border-indigo-500/30 transition-all duration-300 flex flex-col h-full relative group">
+          <div className="bg-[#1e293b]/80 backdrop-blur-sm border border-slate-700 rounded-3xl p-6 md:p-8 hover:border-indigo-500/30 transition-all duration-300 flex flex-col h-full relative group">
              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 text-slate-300 text-xs font-bold px-4 py-1 rounded-full border border-slate-700 uppercase tracking-wider whitespace-nowrap">
                Institutional
              </div>

@@ -101,8 +101,8 @@ import React, { useState } from 'react';
             </button>
           </div>
     
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[300px] w-full min-h-[300px]">
+            <ResponsiveContainer width="100%" height="100%" minHeight={300}>
               {activeTab === 'temp' ? (
                 <AreaChart data={data}>
                   <defs>

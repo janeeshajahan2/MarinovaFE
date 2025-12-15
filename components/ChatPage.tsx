@@ -306,7 +306,7 @@ const ChatPage: React.FC = () => {
           </div>
         )}
 
-        <div className="flex items-end gap-3 max-w-5xl mx-auto">
+        <div className="flex flex-wrap items-end gap-2 md:gap-3 max-w-5xl mx-auto">
            {/* Attachment Actions */}
            <div className="flex gap-1 pb-2">
              <input 

@@ -220,8 +220,8 @@ ${report.sources.map(s => `- ${s.title}: ${s.url}`).join('\n')}
               </div>
 
               {/* Main Report Body */}
-              <div className="bg-[#1e293b] border border-slate-700 rounded-2xl p-8 shadow-xl">
-                 <div className="prose prose-invert prose-lg max-w-none">
+              <div className="bg-[#1e293b] border border-slate-700 rounded-2xl p-6 md:p-8 shadow-xl">
+                 <div className="prose prose-invert prose-base md:prose-lg max-w-none">
                     {/* Simple formatting for markdown-like text */}
                     {report.content.split('\n').map((line, i) => {
                        if (line.startsWith('# ')) return <h1 key={i} className="text-2xl font-bold text-white mb-4 mt-6 border-b border-slate-700 pb-2">{line.replace('# ', '')}</h1>

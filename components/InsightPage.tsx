@@ -68,7 +68,7 @@ const InsightPage: React.FC = () => {
       {selectedInsight && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedInsight(null)}>
            <div 
-             className="relative w-full max-w-2xl bg-[#1e293b] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
+             className="relative w-full max-w-2xl bg-[#1e293b] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]"
              onClick={(e) => e.stopPropagation()}
            >
               <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar">
