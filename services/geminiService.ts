@@ -2,7 +2,15 @@
 import { GoogleGenAI } from "@google/genai";
 import { WeatherResponse } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize client lazily to avoid crash if key is missing on load
+const getAiClient = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    console.error("API Key missing! Make sure GEMINI_API_KEY is set in .env");
+    return null;
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 export const analyzeWeather = async (
   locationName: string,
@@ -43,8 +51,11 @@ export const analyzeWeather = async (
       Tone: Professional, nautical, yet accessible. Do not mention external data providers.
     `;
 
+    const ai = getAiClient();
+    if (!ai) return "API Key missing. Please configure GEMINI_API_KEY.";
+
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: prompt,
     });
 
