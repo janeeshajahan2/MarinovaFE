@@ -23,7 +23,7 @@ import { fetchWeatherData, transformToChartData, transformToDailyForecast } from
 import { analyzeWeather } from './services/geminiService';
 import { getGlobalOceanSnapshot } from './services/dashboardService';
 import { checkAndIncrementUsage, isLimitReached } from './services/usageService';
-import { authService } from './services/authService';
+import { useAuth } from './context/AuthContext';
 
 import WeatherChart from './components/WeatherChart';
 import OceanCard from './components/OceanCard';
@@ -39,10 +39,10 @@ import SubscriptionPage from './components/SubscriptionPage';
 type ViewMode = 'dashboard' | 'intelligence' | 'chat' | 'report' | 'insights';
 
 const App: React.FC = () => {
+  const { isAuthenticated, logout, isLoading: authLoading } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   
   // Intelligence State
@@ -61,17 +61,7 @@ const App: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardOceanData[]>([]);
   const [dashboardLoading, setDashboardLoading] = useState(false);
 
-  // Check for persisted auth token on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      const response = await authService.getCurrentUser();
-      if (response.success) {
-        setIsAuthenticated(true);
-      }
-    };
-    
-    checkAuth();
-  }, []);
+  // Auth state is now managed by AuthContext
 
   // Check usage limit on initial load
   useEffect(() => {
@@ -225,14 +215,12 @@ const App: React.FC = () => {
   };
 
   const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
     setShowLogin(false);
     setViewMode('intelligence'); // Auto-redirect to forecast on login
   };
 
   const handleLogout = () => {
-    authService.logout();
-    setIsAuthenticated(false);
+    logout();
     setViewMode('dashboard');
   };
 
