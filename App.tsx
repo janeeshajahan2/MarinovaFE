@@ -35,15 +35,18 @@ import ChatPage from './components/ChatPage';
 import ReportPage from './components/ReportPage';
 import InsightPage from './components/InsightPage';
 import SubscriptionPage from './components/SubscriptionPage';
+import EmailVerificationBanner from './components/EmailVerificationBanner';
+import CreditCounter from './components/CreditCounter';
 
 type ViewMode = 'dashboard' | 'intelligence' | 'chat' | 'report' | 'insights';
 
 const App: React.FC = () => {
-  const { isAuthenticated, logout, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, user, logout, isLoading: authLoading, verifyEmail } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
   
   // Intelligence State
   const [selectedLocation, setSelectedLocation] = useState<OceanLocation>(FIVE_OCEANS[0]);
@@ -62,6 +65,42 @@ const App: React.FC = () => {
   const [dashboardLoading, setDashboardLoading] = useState(false);
 
   // Auth state is now managed by AuthContext
+
+  // Handle email verification from link
+  useEffect(() => {
+    const handleEmailVerification = async () => {
+      const path = window.location.pathname;
+      
+      // Check if URL is /verify/:token
+      const verifyMatch = path.match(/^\/verify\/(.+)$/);
+      if (verifyMatch) {
+        const token = verifyMatch[1];
+        console.log('Verifying email with token:', token);
+        
+        // Check if user is logged in
+        if (!isAuthenticated) {
+          setVerificationMessage('⚠️ Please sign in first, then click the verification link again.');
+          setShowLogin(true);
+          return;
+        }
+        
+        const result = await verifyEmail(token);
+        console.log('Verification result:', result);
+        
+        if (result.success) {
+          setVerificationMessage('✅ Email verified successfully! You now have 3 free credits.');
+          // Clear the URL
+          window.history.replaceState({}, document.title, '/');
+          // Auto-dismiss message after 5 seconds
+          setTimeout(() => setVerificationMessage(null), 5000);
+        } else {
+          setVerificationMessage('❌ Verification failed: ' + result.message);
+        }
+      }
+    };
+
+    handleEmailVerification();
+  }, [isAuthenticated, verifyEmail]);
 
   // Check usage limit on initial load
   useEffect(() => {
@@ -225,11 +264,26 @@ const App: React.FC = () => {
   };
 
   const handleAuthNavigation = (mode: ViewMode) => {
-    // 2. Check Auth
+    // Check if user is authenticated
     if ((mode === 'intelligence' || mode === 'chat' || mode === 'report' || mode === 'insights') && !isAuthenticated) {
         setShowLogin(true);
         return;
     }
+    
+    // Check if email is verified for protected features
+    if ((mode === 'intelligence' || mode === 'insights') && user && !user.isEmailVerified) {
+      alert('⚠️ Please verify your email to access this feature. Check your inbox for the verification link.');
+      return;
+    }
+    
+    // Check if subscription is required for paid features
+    if ((mode === 'chat' || mode === 'report') && user && user.subscriptionStatus === 'free') {
+      // Redirect to subscription page
+      setViewMode('dashboard');
+      setIsLocked(true);
+      return;
+    }
+    
     setViewMode(mode);
     setIsMobileMenuOpen(false);
   };
@@ -251,7 +305,8 @@ const App: React.FC = () => {
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-64 flex-col bg-[#1e293b] border-r border-slate-700/50">
         <div className="p-6 border-b border-slate-700/50">
-            <h1 className="text-2xl font-bold text-white tracking-wider">MARINOVA</h1>
+            <h1 className="text-2xl font-bold text-white tracking-wider mb-4">MARINOVA</h1>
+            <CreditCounter />
         </div>
         
         <nav className="flex-1 p-4 space-y-2">
@@ -319,7 +374,28 @@ const App: React.FC = () => {
                 {!isAuthenticated && <Lock className="w-4 h-4 text-slate-600" />}
             </button>
         </nav>
-
+        
+        {/* Auth Button in Sidebar Footer */}
+        <div className="p-4 border-t border-slate-700/50">
+            {isAuthenticated ? (
+                <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-medium"
+                >
+                    <LogOut className="w-5 h-5" />
+                    <span>Sign Out</span>
+                </button>
+            ) : (
+                <button
+                    onClick={() => setShowLogin(true)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg transition-all font-semibold shadow-lg shadow-cyan-500/20"
+                >
+                    <LogIn className="w-5 h-5" />
+                    <span>Sign In</span>
+                </button>
+            )}
+        </div>
+        
         <div className="p-6 border-t border-slate-700/50">
             <div className="text-xs text-slate-500">
                 <p>MARINOVA v1.1</p>
@@ -334,9 +410,12 @@ const App: React.FC = () => {
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 bg-[#1e293b] border-b border-slate-700/50">
             <h1 className="text-xl font-bold">MARINOVA</h1>
-            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                <Menu className="w-6 h-6 text-slate-300" />
-            </button>
+            <div className="flex items-center gap-2">
+                <CreditCounter />
+                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                    <Menu className="w-6 h-6 text-slate-300" />
+                </button>
+            </div>
         </header>
 
         {/* Mobile Menu */}
@@ -376,7 +455,41 @@ const App: React.FC = () => {
                     <span>Captain on Deck</span>
                     {!isAuthenticated && <Lock className="w-4 h-4" />}
                 </button>
+                
+                {/* Mobile Auth Button */}
+                <div className="pt-4 border-t border-slate-700">
+                    {isAuthenticated ? (
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-medium"
+                        >
+                            <LogOut className="w-5 h-5" />
+                            <span>Sign Out</span>
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => {
+                                setShowLogin(true);
+                                setIsMobileMenuOpen(false);
+                            }}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg transition-all font-semibold shadow-lg shadow-cyan-500/20"
+                        >
+                            <LogIn className="w-5 h-5" />
+                            <span>Sign In</span>
+                        </button>
+                    )}
+                </div>
              </div>
+        )}
+
+        {/* Email Verification Banner */}
+        {isAuthenticated && <EmailVerificationBanner />}
+
+        {/* Verification Success/Error Message */}
+        {verificationMessage && (
+          <div className={`${verificationMessage.includes('✅') ? 'bg-green-600' : 'bg-red-600'} text-white px-6 py-4 text-center font-medium`}>
+            {verificationMessage}
+          </div>
         )}
 
         {/* Scrollable Content Area */}
@@ -403,23 +516,6 @@ const App: React.FC = () => {
                                 </span>
                             </div>
                             
-                            {isAuthenticated ? (
-                                <button 
-                                    onClick={handleLogout}
-                                    className="flex items-center gap-2 px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-full transition-all font-medium border border-slate-600"
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                    <span>Sign Out</span>
-                                </button>
-                            ) : (
-                                <button 
-                                    onClick={() => setShowLogin(true)}
-                                    className="flex items-center gap-2 px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-full transition-all font-medium shadow-lg shadow-cyan-500/20 border border-cyan-500/50"
-                                >
-                                    <LogIn className="w-4 h-4" />
-                                    <span>Sign In</span>
-                                </button>
-                            )}
                         </div>
                     </div>
 

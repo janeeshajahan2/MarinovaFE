@@ -4,11 +4,19 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   token?: string;
+  verificationLink?: string;
   user?: {
     id: string;
     fullName: string;
     email: string;
+    isEmailVerified?: boolean;
+    subscriptionStatus?: string;
+    usageCredits?: number;
+    usageHistory?: Array<{ feature: string; usedAt: Date }>;
   };
+  usageCredits?: number;
+  requiresVerification?: boolean;
+  requiresSubscription?: boolean;
 }
 
 export interface LoginCredentials {
@@ -140,5 +148,131 @@ export const authService = {
   // Logout
   logout(): void {
     this.removeToken();
+  },
+
+  // Verify email
+  async verifyEmail(token: string): Promise<AuthResponse> {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/verify-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Verify email error:', error);
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    }
+  },
+
+  // Track usage
+  async trackUsage(feature: string): Promise<AuthResponse> {
+    try {
+      const token = this.getToken();
+
+      if (!token) {
+        return {
+          success: false,
+          message: 'Not authenticated',
+        };
+      }
+
+      const response = await fetch(`${API_URL}/api/usage/track`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ feature }),
+      });
+
+      const data = await response.json();
+
+      // If requiresSubscription or requiresVerification, throw to handle in context
+      if (!data.success && (data.requiresSubscription || data.requiresVerification)) {
+        throw data;
+      }
+
+      return data;
+    } catch (error: any) {
+      if (error.requiresSubscription || error.requiresVerification) {
+        throw error;
+      }
+      console.error('Track usage error:', error);
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    }
+  },
+
+  // Update subscription
+  async updateSubscription(plan: string): Promise<AuthResponse> {
+    try {
+      const token = this.getToken();
+
+      if (!token) {
+        return {
+          success: false,
+          message: 'Not authenticated',
+        };
+      }
+
+      const response = await fetch(`${API_URL}/api/usage/subscribe`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ plan }),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Update subscription error:', error);
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    }
+  },
+
+  // Resend verification email
+  async resendVerification(): Promise<AuthResponse> {
+    try {
+      const token = this.getToken();
+
+      if (!token) {
+        return {
+          success: false,
+          message: 'Not authenticated',
+        };
+      }
+
+      const response = await fetch(`${API_URL}/api/auth/resend-verification`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      return {
+        success: false,
+        message: 'Network error. Please check your connection.',
+      };
+    }
   },
 };
